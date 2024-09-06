@@ -1,0 +1,549 @@
+---
+title: "THSS 730 - Lab 3"
+subtitle: "Continuous Distributions and Confidence Intervals"
+
+format: 
+  html: 
+    toc: true
+    df-print: paged
+    embed-resources: true
+---
+
+```{r}
+#| code-fold: true
+
+# Necessary libraries
+library(ggplot2)
+library(readxl)
+```
+
+## Normal Distribution
+
+```{r}
+#| code-fold: true
+
+# Define the range and density for standard normal distribution
+x <- seq(-4, 4, length = 1000)
+y <- dnorm(x)
+
+# Create the plot
+plot(x, y, type = "l", lwd = 2, col = "blue",
+     main = "Standard Normal Distribution",
+     xlab = "z", ylab = "Density")
+```
+
+If $X \sim N(\mu, \sigma^2)$: $$f(x) = \frac{1}{\sigma \sqrt{2\pi}} \exp\left(-\frac{(x - \mu)^2}{2\sigma^2}\right), -\infty < x < \infty$$
+
+Where $\sigma > 0$.
+
+-   $\text{E}(X) = \mu$ (Expected value or mean)
+
+-   $\text{Var}(X) = \sigma^2$ (Variance)
+
+-   $\text{SD}(X) = \sigma$ (Standard deviation)
+
+The standard normal distribution is denoted by $Z \sim N(0, 1)$.
+
+If $X\sim N(\mu, \sigma^2)$ and $Z = \frac{X - \mu}{\sigma}$, then $Z \sim N(0, 1)$.
+
+You can calculate normal probabilities and percentiles using the following statements within R:
+
+-   Cumulative probability (standard normal):\
+    $\text{Pr}(Z \leq k) =$ `pnorm(k)`
+
+-   Upper tail probability (standard normal):\
+    $\text{Pr}(Z > k) =$ `1 - pnorm(k)` OR `pnorm(k, lower.tail=FALSE)`
+
+-   Cumulative probability (general normal):\
+    $\text{Pr}(X \leq k) =$ `pnorm(k, mu, sigma)`
+
+-   Upper tail probability (general normal):\
+    $\text{Pr}(X > k) =$ `1 - pnorm(k, mu, sigma)` OR `pnorm(k, mu, sigma, lower.tail=FALSE)`
+
+-   Percentile (standard normal):\
+    $z_p =$ `qnorm(p)`
+
+-   Percentile (general normal):\
+    $x_p =$ `qnorm(p, mu, sigma)`
+
+```{r}
+
+# Examples
+a <- pnorm(1.96)
+b <- 1 - pnorm(1.96)
+c <- qnorm(0.975)
+d <- pnorm(4, mean = 10, sd = 3)
+e <- 1 - pnorm(4, mean = 10, sd = 3)
+f <- qnorm(0.35, mean = 10, sd = 3)
+
+# Print the results
+temp <- data.frame(a, b, c, d, e, f)
+round(temp,4)
+
+```
+
+It can be easy to confuse these functions, so remember you can always look up what a function does using the `?<function name>` syntax to find helpful info about a function.
+
+```{r}
+#| eval: false
+?pnorm
+
+```
+
+### Some visual representations of probabilities
+
+With continuous distributions, we're most interested in the probability of an event that falls into some range of values. These probabilities are computed as areas underneath a density curve.
+
+Here's a couple examples of what this might look like:
+
+```{r}
+#| code-fold: true
+
+x <- seq(-4, 4, length = 1000)
+y <- dnorm(x)
+
+# Create the plot
+plot(x, y, type = "l", lwd = 2, col = "blue",
+     main = "P(Z < -0.75) = 0.2266",
+     xlab = "z", ylab = "Density")
+
+# Shade the region less than 0.75
+x_shade <- seq(-4, -0.75, length = 500)
+y_shade <- dnorm(x_shade)
+polygon(c(-4, x_shade, -0.75), c(0, y_shade, 0), col = "skyblue", border = NA)
+
+# Add a vertical line at 0.75
+abline(v = -0.75, lwd = 2, lty = 2)
+
+# Add the main line plot again to keep it on top
+lines(x, y, lwd = 2, col = "blue")
+
+```
+
+```{r}
+#| code-fold: true
+
+x <- seq(-4, 4, length = 1000)
+y <- dnorm(x)
+
+# Create the plot
+plot(x, y, type = "l", lwd = 2, col = "blue",
+     main = "P(-1 < Z < 1) = 0.6827",
+     xlab = "z", ylab = "Density")
+
+# Shade the region between -1 and 1
+x_shade <- seq(-1, 1, length = 100)
+y_shade <- dnorm(x_shade)
+polygon(c(-1, x_shade, 1), c(0, y_shade, 0), col = "skyblue", border = NA)
+abline(v = c(-1, 1), lwd = 2, lty = 2)
+
+# Add the main line plot again to keep it on top
+lines(x, y, lwd = 2, col = "blue")
+
+```
+
+### Your Turn
+
+Among females in the United States between 18 and 74 years of age, diastolic blood pressure is normally distributed with $\mu = 77$ mm Hg and standard deviation $\sigma = 11.6$ mm Hg.
+
+a)  What is the probability that a randomly selected woman has a diastolic blood pressure less than 60 mm Hg?
+
+```{r}
+#| eval: false
+
+# NOTE: You don't need to include "q = ", "mean = ", etc. if you specify values 
+# in the order the function expects, but it doesn't hurt!
+
+pnorm(q = 60, mean = 77, sd = 11.6)
+
+```
+
+b)  What is the probability that she has a diastolic blood pressure greater than 90 mm Hg?
+
+```{r}
+#| eval: false
+
+1 - pnorm(q = 90, mean = 77, sd = 11.6)
+#OR
+pnorm(q = 90, mean = 77, sd = 11.6, lower.tail = FALSE)
+
+```
+
+c)  What is the probability that the woman has a diastolic blood pressure between 60 and 90 mm Hg?
+
+```{r}
+#| eval: false
+
+pnorm(q = 90, mean = 77, sd = 11.6) - pnorm(q = 60, mean = 77, sd = 11.6)
+
+```
+
+d)  What is the 80th percentile of diastolic blood pressure for females in the United States between 18 and 74 years of age?
+
+```{r}
+#| eval: false
+
+qnorm(p = 0.80, mean = 77, sd = 11.6)
+
+```
+
+e)  What is the probability that among ten females selected at random from the population, exactly two will have blood pressure outside of the range 60 to 90 mm hg?
+
+```{r}
+#| eval: false
+
+# We will use of both the normal distribution AND the binomial distribution!
+# We can consider finding a female outside the range as a "success"
+
+# Calculate the probability of success
+p_success <- 1 - (pnorm(q = 90, mean = 77, sd = 11.6) - pnorm(q = 60, mean = 77, sd = 11.6))
+
+# Compute the probability of seeing exactly 2 of 10 females with a binomial density
+dbinom(x = 2, size = 10, prob = p_success)
+  
+```
+
+### Making Plots
+
+We can also use R to plot the probability-density function (PDF) and the cumulative distribution function (CDF).
+
+#### Probability density function
+
+First we need to create the data we would like to plot.
+
+```{r} 
+
+# Create a sequence from -7 to 7 with a step of 0.1
+i <- seq(-7, 7, by = 0.1)
+
+# Calculate the PDF values for some different normal distributions
+# dnorm() will give us the height of the curve at each of the points in our sequence
+pdf1 <- dnorm(i, mean = 0, sd = 1)     # N(0, 1)
+pdf2 <- dnorm(i, mean = 1, sd = 2)     # N(1, 4)
+pdf3 <- dnorm(i, mean = -2, sd = 0.5)  # N(-2, 0.25)
+
+# Create a data frame to store the values
+pdf_graph <- data.frame(i, pdf1, pdf2, pdf3)
+
+```
+
+Then we can use the data to create a plot. We'll start with the standard normal distribution.
+
+Using ggplot2:
+
+```{r}
+
+plot1 <- ggplot(pdf_graph, aes(x = i, y = pdf1)) +
+          geom_line(color = "blue", linewidth = 1) +
+          labs(title = "Standard Normal Curve", x = "x", y = "f(x)")
+
+plot1
+```
+
+We could also use `stat_function()` to get our density values, which doesn't require defining the PDFs ahead of time.
+
+```{r}
+#| eval: false
+
+plot2 <- ggplot(as.data.frame(i), aes(x=i)) +
+          stat_function(fun=dnorm, col = "blue", linewidth = 1) +
+          labs(title = "Standard Normal Curve", x = "x", y = "f(x)")
+plot2
+
+```
+
+And of course ggplot isn't the only way to make plots. Here's a way to use base R, instead:
+
+```{r}
+plot(i, pdf1, type = "l", col = "blue", lwd = 2,
+     xlab = "x", ylab = "f(x)", main = "Standard Normal Curve")
+
+```
+
+
+We can plot all three curves at once to compare them easily.
+
+Using ggplot2:
+
+```{r}
+# Convert the data frame to a long format for ggplot2 (makes adding a legend simpler)
+pdf_graph_long <- data.frame(
+  i = rep(i, 3),
+  pdf = c(pdf1, pdf2, pdf3),
+  Distribution = factor(rep(c("N(0,1)", "N(1,4)", "N(-2,0.25)"), each = length(i)))
+)
+
+# Plot all three normal curves
+ggplot(pdf_graph_long, aes(x = i, y = pdf, color = Distribution)) +
+  geom_line(linewidth = 1) +
+  labs(title = "Normal Curves", x = "x", y = "f(x)") +
+  scale_color_manual(values = c("green", "blue", "red"))
+
+```
+
+Using base R:
+
+```{r}
+
+plot(i, pdf1, type = "l", col = "blue", lwd = 2,
+     xlab = "x", ylab = "f(x)", ylim = c(0,0.85), #increase y-limits to fit upcoming lines
+     main = "Normal Curves")
+
+lines(i, pdf2, col = "red", lwd = 2)
+lines(i, pdf3, col = "green", lwd = 2)
+
+# Add a legend to differentiate the curves
+legend("topright", legend = c( "N(-2, 0.25)", "N(0, 1)", "N(1, 4)"),
+       col = c("green","blue", "red"), lwd = 2)
+
+
+
+```
+
+#### Cumulative distribution function
+
+To plot a CDF, we again need to create the data first. This time we use the `pnorm()` function instead of `dnorm()`.
+
+```{r}
+
+# Create a sequence from -7 to 7 with a step of 0.1
+i <- seq(-7, 7, by = 0.1)
+
+# Calculate the CDF values for different normal distributions
+cdf1 <- pnorm(i, mean = 0, sd = 1)     # N(0, 1)
+cdf2 <- pnorm(i, mean = 1, sd = 2)     # N(1, 2^2) = N(1, 4)
+cdf3 <- pnorm(i, mean = -2, sd = 0.5)  # N(-2, 0.5^2) = N(-2, 0.25)
+
+# Create a data frame to store the values
+cdf_graph <- data.frame(i, cdf1, cdf2, cdf3)
+
+ggplot(cdf_graph, aes(x = i, y = cdf1)) +
+  geom_line(color = "blue", linewidth = 1) +
+  labs(title = "Standard Normal CDF", x = "x", y = "F(x)")
+
+```
+
+Plotting all three CDF curves with ggplot2:
+
+```{r}
+# Convert the data frame to a long format for ggplot2
+cdf_graph_long <- data.frame(
+  i = rep(i, 3),
+  cdf = c(cdf1, cdf2, cdf3),
+  distribution = factor(rep(c("N(0,1)", "N(1,4)", "N(-2,0.25)"), each = length(i)))
+)
+
+# Plot all three normal CDFs
+ggplot(cdf_graph_long, aes(x = i, y = cdf, color = distribution)) +
+  geom_line(linewidth = 1) +
+  labs(title = "Normal CDFs", x = "x", y = "F(x)") +
+  scale_color_manual(values = c("blue", "red", "green"))
+
+```
+
+### Empirical Plots
+
+If we have collected data, we can use R to plot histograms and empirical CDFs for continuous variables along with a corresponding normal curve. This gives us a visual way to evaluate normality. 
+
+Going back to the “lowbwt.xlsx” data set from Lab #1, consider the systolic blood pressure (sbp) variable. We can plot a histogram of sbp as we did in Lab #1, and add a normal density curve to the plot with the `stat_function()` layer. In this case, we will use the mean and standard deviation of the data as the parameters in our normal distribution.
+
+```{r}
+
+lowbwt <- read_xlsx("data/lowbwt.xlsx")
+
+sbp_pdf <- ggplot(lowbwt, aes(x = sbp)) +
+              geom_histogram(aes(y = after_stat(density)), bins = 20, fill = "lightblue", color = "black") + 
+              stat_function(fun = dnorm, args = list(mean = mean(lowbwt$sbp), sd = sd(lowbwt$sbp)),
+                color = "blue", linewidth = 1) +
+              labs(title = "Histogram with Normal Density Line", x = "SBP", y = "Density")
+
+sbp_pdf
+
+```
+
+We could add any other normal density we want. Lets add a line for the PDF of a normal distribution with a mean of 50 mm Hg and a standard deviation of 10 mm Hg.
+
+```{r}
+
+sbp_pdf + stat_function(fun = dnorm, args = list(mean = 50, sd = 10),
+                color = "orange1", linewidth = 1.2, lty = 2)
+
+```
+
+
+We can do something similar with the Empirical (observed) CDF.
+
+```{r}
+
+sbp_cdf <- ggplot(lowbwt, aes(x = sbp)) +
+            stat_ecdf(geom = "step", color = "blue", linewidth = 1) +
+            labs(title = "Empirical CDF Plot", x = "SBP", y = "F(SBP)")
+
+sbp_cdf
+
+```
+
+Now add on a line for the CDF from a normal distribution:
+
+```{r}
+
+sbp_cdf + stat_function(fun = pnorm, args = list(mean = mean(lowbwt$sbp), sd = sd(lowbwt$sbp)),
+            color = "orange1", linewidth = 1.2) +
+          labs(title = "Empirical CDF with Normal CDF", x = "SBP", y = "F(SBP)")
+
+```
+
+## t Distribution
+
+For a sample of size $n$ drawn from an underlying normal population:
+
+$t = \frac{\bar{X} - \mu}{s/{\sqrt{n}}} \sim t_{n-1}$ (t with n-l degrees of freedom)
+
+The t distribution:
+
+-	Has one parameter: degrees of freedom
+
+-	Symmetric and bell-shaped
+
+-	Approaches standard normal distribution as degrees of freedom increase
+
+The R functions for calculating probability and percentiles are very similar to what we use to work with the normal distribution, except we only need degrees of freedom, not a mean and standard deviation.
+
+You can calculate normal probabilities and percentiles using the following statements within R:
+
+-   Cumulative probability:\
+    $\text{Pr}(t \leq k) =$ `pt(k, df)`
+
+-   Upper tail probability:\
+    $\text{Pr}(Z > k) =$ `1 - pt(k, df)` OR `pt(k, df, lower.tail=FALSE)`
+
+-   Percentile:\
+    $t_p =$ `qt(p, df)`
+    
+### Making Plots    
+
+Let's plot some PDFs from some t distributions and compare them to the standard normal distribution.
+
+```{r}
+
+# Create a sequence from -4 to 4 with a step of 0.1
+i <- seq(-4, 4, by = 0.1)
+
+# Calculate the PDF values
+norm <- dnorm(i, mean = 0, sd = 1)    
+t3 <- dt(i, df = 3)                   
+t10 <- dt(i, df = 10)
+t25 <- dt(i, df = 25)
+
+# Create a data frame to store the values
+norm_t_graph_long <- data.frame(
+  i = rep(i, 4),
+  density = c(norm, t3, t10, t25),
+  distribution = factor(rep(c("N(0,1)", "t(3 df)", "t(10 df)", "t(25 df)"), each = length(i)))
+)
+
+# Plot the normal and t-distributions
+ggplot(norm_t_graph_long, aes(x = i, y = density, color = distribution)) +
+  geom_line(linewidth = 1) +
+  labs(title = "Normal and t Curves", x = "x", y = "f(x)") +
+  theme_minimal() +
+  scale_color_manual(values = c("black", "blue", "green", "magenta")) + 
+  stat_function(fun = dnorm, col = "black", linewidth = 1.2)
+
+
+
+```
+
+Notice visually what happens to the PDFs as the degrees of freedom increase. The more information we have (degrees of freedom), the closer a t-distribution represents the standard normal distribution. But we don't need a huge amount of data to get a close match -- at 25 degrees of freedom the PDFs are already very similar!
+
+## Confidence Intervals
+
+A $100\% \times (1-\alpha)$ confidence interval for the mean when $\sigma$ is known is given by:
+
+$$
+\bar{x} \pm z_{1-\frac{\alpha}{2}} \frac{\sigma}{\sqrt{n}}
+$$
+
+Or equivalently:
+
+$$
+\left(\bar{x} - z_{(1-\alpha/2)} \frac{\sigma}{\sqrt{n}}, \bar{x} + z_{(1-\alpha/2)} \frac{\sigma}{\sqrt{n}}\right)
+$$
+
+A $100\% \times (1-\alpha)$ confidence interval for the mean when $\sigma$ is not known but estimated by $s$ is given by:
+
+$$
+\bar{x} \pm t_{n-1,1-\frac{\alpha}{2}} \frac{s}{\sqrt{n}}
+$$
+
+Or equivalently:
+
+$$
+\left(\bar{x} - t_{(n-1, 1-\alpha/2)} \frac{s}{\sqrt{n}}, \bar{x} + t_{(n-1, 1-\alpha/2)} \frac{s}{\sqrt{n}}\right)
+$$
+
+These equations are valid for large $n$ based on the central limit theorem, even if the underlying distribution is not normal.
+
+If $n > 200$, then an approximate $100\% \times (1-\alpha)$ confidence interval for the mean when $\sigma$ is not known but estimated by $s$ is given by:
+
+$$
+\bar{x} \pm z_{1-\frac{\alpha}{2}} \frac{s}{\sqrt{n}}
+$$
+
+Or equivalently:
+
+$$
+\left(\bar{x} - z_{(1-\alpha/2)} \frac{s}{\sqrt{n}}, \bar{x} + z_{(1-\alpha/2)} \frac{s}{\sqrt{n}}\right)
+$$
+
+### Your Turn
+
+Methylphenidate is a drug that is widely used in the treatment of attention-deficit disorder. As part of a crossover study, ten children between the ages of 7 and 12 who suffered from this disorder were assigned to receive the drug for a period of time after which they were switched to placebo. Another ten were first given placebo and then switched to active drug. Measures of each child’s attention and behavioral status, both on the drug and on the placebo, were obtained using an instrument called the Parent Rating Scale. Distributions of these scores are approximately normal with unknown means and standard deviations. Lower scores indicate an increase in attention. We wish to estimate the mean attention rating scores for children taking methylphenidate and for those taking the placebo.
+
+The random sample of 20 children enrolled in the study had mean attention rating score $\overline{x_M} = 10.8$ and standard deviation $s_M = 2.9$ when taking methylphenidate and mean rating score $\overline{x_P}=14.0$ and standard deviation $s_P =4.8$ when taking the placebo.
+
+a)	Find the value of t corresponding to a 95% confidence interval with 19 (n – 1 = 20 – 1) degrees of freedom (df).
+
+```{r}
+#| eval: false
+
+qt(p = 1-0.05/2, df = 20-1)
+
+```
+
+b)	Construct a 95% confidence interval for μM, the mean attention rating score for children taking the drug.
+
+```{r}
+#| eval: false
+
+# Lower bound
+10.8 - qt(p = 1-0.05/2, df = 20-1) * 2.9 / sqrt(20)
+
+# Upper bound
+10.8 + qt(p = 1-0.05/2, df = 20-1) * 2.9 / sqrt(20)
+
+```
+
+c)	Construct a 95% confidence interval for μP, the mean attention rating score for children taking placebo. 
+
+```{r}
+#| eval: false
+
+# Using 'c(-1,1)' is a way to both add and subtract in one line of code!
+# Make sure to include '*' when you do this
+14.0 + c(-1,1) * qt(p = 0.975, df = 19) * 4.8 / sqrt(20)
+
+```
+
+d)	Now assume that the sample standard deviation when taking methylphenidate is the actual population standard deviation (i.e. assume $\sigma$ = 2.9). Calculate the 95% confidence interval.
+
+```{r}
+#| eval: false
+
+# We know the true standard deviation, so we should use the standard normal distribution
+10.8 + c(-1,1) * qnorm(p = 0.975) * 2.9 / sqrt(20)
+
+```
+
+Later in the semester when we cover hypothesis testing and linear regression, we will be able to take advantage of some built-in R functions to compute confidence intervals, but for now it's simplest to create these intervals "by hand"!
+
