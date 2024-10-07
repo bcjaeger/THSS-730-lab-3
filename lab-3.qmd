@@ -273,6 +273,18 @@ pdf_graph_long <- data.frame(
   Distribution = factor(rep(c("N(0,1)", "N(1,4)", "N(-2,0.25)"), each = length(i)))
 )
 
+library(tidyr)
+library(magrittr)
+library(dplyr)
+pdf_graph_long <- pdf_graph %>% 
+  pivot_longer(cols = c(pdf1, pdf2, pdf3),
+               values_to = "pdf",
+               names_to = "Distribution") %>% 
+  mutate(Distribution = recode(Distribution, 
+                               pdf1 = "N(0,1)",
+                               pdf2 = "N(1,4)",
+                               pdf3 = "N(-2,0.25)"))
+
 # Plot all three normal curves
 ggplot(pdf_graph_long, aes(x = i, y = pdf, color = Distribution)) +
   geom_line(linewidth = 1) +
@@ -349,13 +361,23 @@ Going back to the “lowbwt.xlsx” data set from Lab #1, consider the systolic 
 
 ```{r}
 
+
 lowbwt <- read_xlsx("data/lowbwt.xlsx")
 
 sbp_pdf <- ggplot(lowbwt, aes(x = sbp)) +
-              geom_histogram(aes(y = after_stat(density)), bins = 20, fill = "lightblue", color = "black") + 
-              stat_function(fun = dnorm, args = list(mean = mean(lowbwt$sbp), sd = sd(lowbwt$sbp)),
-                color = "blue", linewidth = 1) +
-              labs(title = "Histogram with Normal Density Line", x = "SBP", y = "Density")
+  geom_histogram(
+    aes(y = after_stat(density)),
+    bins = 20,
+    fill = "lightblue",
+    color = "black"
+  ) +
+  stat_function(
+    fun = dnorm,
+    args = list(mean = mean(lowbwt$sbp), sd = sd(lowbwt$sbp)),
+    color = "blue",
+    linewidth = 1
+  ) +
+  labs(title = "Histogram with Normal Density Line", x = "SBP", y = "Density")
 
 sbp_pdf
 
